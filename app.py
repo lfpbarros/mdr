@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 
 # 🔹 Define o nome da página e o favicon
-st.set_page_config(page_title="Gerador de MDR", page_icon="📄")
+st.set_page_config(page_title="Gerador de MDR", page_icon="📄", layout="wide")
 
 # Função para converter imagem local em base64
 def get_base64_image(image_path):
@@ -135,33 +135,38 @@ if st.button("Salvar Alterações", key="save_changes"):
     st.success("Alterações salvas!")
     st.rerun()
 
-# 🔹 Adicionar uma nova coluna como checkbox sem recarregar a página
-st.subheader("Adicionar Nova Coluna")
-st.write("Sempre salve as suas alterações antes de adicionar uma nova coluna!")
-new_column = st.text_input("Nome da nova coluna:")
+# 🔹 Criar colunas lado a lado para "Adicionar Nova Coluna" e "Baixar Tabela"
+col1, col2 = st.columns(2)
 
-if st.button("Adicionar Coluna", key="add_column"):
-    if new_column:
-        new_column = new_column.strip()  # Remove espaços extras
-        if new_column not in st.session_state.df.columns:
-            # 🔹 Salvar a tabela antes de adicionar a nova coluna
-            st.session_state.df[new_column] = False  # Adiciona uma nova coluna de checkbox
-            st.success(f"Coluna '{new_column}' adicionada!")
-            st.rerun()
+# 🔹 Seção de Adicionar Nova Coluna
+with col1:
+    st.subheader("Adicionar Nova Coluna")
+    st.write("Sempre salve as suas alterações antes de adicionar uma nova coluna!")
+    new_column = st.text_input("Nome da nova coluna:")
+
+    if st.button("Adicionar Coluna", key="add_column"):
+        if new_column:
+            new_column = new_column.strip()  # Remove espaços extras
+            if new_column not in st.session_state.df.columns:
+                # 🔹 Salvar a tabela antes de adicionar a nova coluna
+                st.session_state.df[new_column] = False  # Adiciona uma nova coluna de checkbox
+                st.success(f"Coluna '{new_column}' adicionada!")
+                st.rerun()
+            else:
+                st.warning("Essa coluna já existe!")
         else:
-            st.warning("Essa coluna já existe!")
-    else:
-        st.warning("Por favor, insira um nome válido para a coluna.")
+            st.warning("Por favor, insira um nome válido para a coluna.")
 
-# 🔹 Botão para baixar a tabela como Excel
-st.subheader("Baixar Tabela")
-if st.button("Download Excel"):
-    excel_buffer = pd.ExcelWriter("MDR_tabela.xlsx", engine="xlsxwriter")
-    st.session_state.df.to_excel(excel_buffer, index=False, sheet_name="MDR")
-    excel_buffer.close()
-    st.download_button(
-        label="Clique para baixar",
-        data=open("MDR_tabela.xlsx", "rb"),
-        file_name="MDR_tabela.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+# 🔹 Seção de Baixar Tabela
+with col2:
+    st.subheader("Baixar Tabela")
+    if st.button("Download Excel"):
+        excel_buffer = pd.ExcelWriter("MDR_tabela.xlsx", engine="xlsxwriter")
+        st.session_state.df.to_excel(excel_buffer, index=False, sheet_name="MDR")
+        excel_buffer.close()
+        st.download_button(
+            label="Clique para baixar",
+            data=open("MDR_tabela.xlsx", "rb"),
+            file_name="MDR_tabela.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
