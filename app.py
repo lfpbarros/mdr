@@ -160,13 +160,62 @@ with col1:
 # 🔹 Seção de Baixar Tabela
 with col2:
     st.subheader("Baixar Tabela")
+    
     if st.button("Download Excel"):
-        excel_buffer = pd.ExcelWriter("MDR_tabela.xlsx", engine="xlsxwriter")
-        st.session_state.df.to_excel(excel_buffer, index=False, sheet_name="MDR")
-        excel_buffer.close()
-        st.download_button(
-            label="Clique para baixar",
-            data=open("MDR_tabela.xlsx", "rb"),
-            file_name="MDR_tabela.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        # Criar uma nova estrutura de dados para armazenar os valores transformados
+        transformed_data = []
+
+        # Criar um dicionário para rastrear a numeração de cada pacote
+        pacote_counter = {}
+        pacote_numero = 1  # Começa a contagem dos pacotes
+
+        # Percorrer cada linha da tabela original
+        for _, row in st.session_state.df.iterrows():
+            pacote = row["Pacote"]
+
+            # Se o pacote for novo, definir um novo número para ele
+            if pacote not in pacote_counter:
+                pacote_counter[pacote] = pacote_numero
+                pacote_numero += 1  # Incrementar para o próximo pacote
+
+            # Para cada coluna de documento, verificar se está marcada como True
+            doc_index = 1  # Contador interno para o documento dentro do pacote
+            for col in st.session_state.df.columns:
+                if col not in ["Pacote", "Sistema"] and row[col] == True:
+                    numeracao = f"{pacote_counter[pacote]}.{doc_index}"  # Formato X.Y
+                    transformed_data.append({
+                        "Numeração": numeracao,
+                        "Pacote": pacote,
+                        "Nome do Documento": col,
+                        "Data de Finalização": ""
+                    })
+                    doc_index += 1  # Incrementa a numeração dentro do pacote
+
+        # Criar um novo DataFrame com o formato desejado
+        transformed_df = pd.DataFrame(transformed_data)
+
+        if not transformed_df.empty:
+            # Criar um buffer para o Excel
+            excel_buffer = "MDR_tabela_transformada.xlsx"
+
+            # Criar o arquivo Excel e ajustar as colunas
+            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
+                transformed_df.to_excel(writer, index=False, sheet_name="MDR_Transformado")
+
+                # Ajustar largura das colunas
+                workbook = writer.book
+                worksheet = writer.sheets["MDR_Transformado"]
+                worksheet.set_column("A:A", 10)  # Numeração
+                worksheet.set_column("B:B", 20)  # Pacote
+                worksheet.set_column("C:C", 40)  # Nome do Documento
+                worksheet.set_column("D:D", 20)  # Data de Finalização (espaço extra)
+
+            # Botão para baixar o arquivo
+            st.download_button(
+                label="Clique para baixar",
+                data=open(excel_buffer, "rb"),
+                file_name="MDR_tabela_transformada.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.warning("Nenhum dado marcado para exportação.")
