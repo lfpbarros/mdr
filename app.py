@@ -214,7 +214,7 @@ with col2:
             st.download_button(
                 label="Clique para baixar",
                 data=open(excel_buffer, "rb"),
-                file_name="MDR_tabela_transformada.xlsx",
+                file_name="MDR_tabela.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         else:
