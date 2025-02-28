@@ -1,0 +1,7 @@
+[theme]
+base="dark" # Mantém o tema escuro
+primaryColor="#063d5b"  # Define a cor principal como azul
+backgroundColor="#0E1117"  # Cor do fundo da página
+secondaryBackgroundColor="#1E1E1E"  # Cor do fundo da tabela e sidebar
+textColor="#FFFFFF"  # Cor do texto (branco)
+font="sans serif"
