@@ -72,6 +72,17 @@ sistema_options = [
     "INS - Installation Item", "ITG - Integrity", "OPS - Operation"
 ]
 
+# Lista de opções do dropdown para "Campo"
+campo_options = ["ABL", "TBMT", "FPA", "POL", "WAH"]
+
+# Campo de seleção fora da tabela
+st.subheader("Selecione o Campo")
+campo_selecionado = st.selectbox("Campo:", campo_options)
+
+# Campo de texto para "Projeto"
+st.subheader("Informe o Projeto")
+projeto_nome = st.text_input("Projeto:")
+
 # Lista de novas colunas (checkbox)
 checkbox_columns = [
     "MEL - Master Equipment List", 
@@ -182,7 +193,7 @@ with col2:
             doc_index = 1  # Contador interno para o documento dentro do pacote
             for col in st.session_state.df.columns:
                 if col not in ["Pacote", "Sistema"] and row[col] == True:
-                    numeracao = f"{pacote_counter[pacote]}.{doc_index}"  # Formato X.Y
+                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"  # Formato X.Y
                     transformed_data.append({
                         "Numeração": numeracao,
                         "Pacote": pacote,
