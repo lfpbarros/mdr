@@ -123,7 +123,7 @@ st.session_state.df = st.session_state.df[st.session_state.df["Pacote"].str.stri
 st.session_state.df.reset_index(drop=True, inplace=True)
 
 # 🔹 Exibir a tabela editável sem permitir novas linhas vazias
-st.subheader("Preencha aqui as informações do MDR")
+st.subheader("Preencha aqui as informações do MDR (Master Document Register)")
 
 edited_df = st.data_editor(
     st.session_state.df,
