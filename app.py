@@ -1,6 +1,8 @@
 import base64
 import streamlit as st
 import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 # 🔹 Define o nome da página e o favicon
 st.set_page_config(page_title="Gerador de MDR", page_icon="📄", layout="wide")
@@ -168,60 +170,129 @@ with col1:
         else:
             st.warning("Por favor, insira um nome válido para a coluna.")
 
+header_info = {
+    "Numeração": [
+            ["1"],
+            ["1.1"],
+            ["1.2"],
+            ["1.3"],
+            ["1.4"],
+            ["1.5"],
+            ["1.6"],
+            ["1.7"],
+            ["1.8"],
+            ["1.9"],
+            ["2.1"],
+            ["2.1.1"],
+            ["2.1.2"],
+            ["2.1.3"],
+            ["2.1.4"],
+            ["2.1.5"],
+            ["2.1.6"],
+            ["2.1.7"],
+            ["2.1.8"],
+            ["2.1.9"],
+            ["2.1.10"],
+            ["2.1.11"],
+            ["2.1.12"],
+            ["2.1.13"],
+            ["2.1.14"],
+            ["2.1.15"],
+            ["2.1.16"],
+            ["2.1.17"],
+            ["2.1.18"],
+            ["2.1.19"],
+        ],
+    "Pacote": [],
+    "Nome do Documento": [
+            ["PORTFÓLIO"],
+            ["BOD - Basis of Design Preliminar"],
+            ["TAP - Formulário de Análise de Oportunidade"],
+            ["CRONOP - Cronograma Preliminar"],
+            ["AEM - Análise de Estoque de materiais PRIO"],
+            ["MPL - Master Project List Preliminar"],
+            ["AFE - Approval for Expenditure"],
+            ["SUBLAYP - Subsea Layout Preliminar"],
+            ["BFD - Block Flow Diagram Preliminar"],
+            ["STIME - Cronograma Preliminar de Operação (Subsea Time)"],
+            ["PLANEJAMENTO - SYSTEM"],
+            ["SCH - Project Baseline Schedule"],
+            ["WBS - Work Breakdown Structure"],
+            ["BoD - Basis of Design"],
+            ["BFD - Block Flow Diagram"],
+            ["SUBLAY - Subsea Layout"],
+            ["DBD - Database Design"],
+            ["SGSS - Checklist de Atendimento ao SGSS"],
+            ["MDR - Master Document Register Re"],
+            ["HAZID - Project HAZID"],
+            ["HDS - Overall System Hydraulic Schematic"],
+            ["ELS - Overall System Electrical Schematic"],
+            ["BATIM - Bathimetry Report"],
+            ["GEOTEC - Geotechnical Report"],
+            ["SBL - Scope Battery Limit"],
+            ["FASS - Flow Assurance Report"],
+            ["HEA - Hydraulical and Electrical Analysis"],
+            ["PRIR - Preliminary Recovery and Installation Requirements"],
+            ["SCEM - Subsea Cause and Effect Matrix"],
+            ["Material Compatibility Assessment | Material Selection Report"],
+        ],
+        "Data de Finalização": []}
+
 # 🔹 Seção de Baixar Tabela
 with col2:
     st.subheader("Baixar Tabela")
     
     if st.button("Download Excel"):
-        # Criar uma nova estrutura de dados para armazenar os valores transformados
         transformed_data = []
-
-        # Criar um dicionário para rastrear a numeração de cada pacote
         pacote_counter = {}
-        pacote_numero = 1  # Começa a contagem dos pacotes
-
-        # Percorrer cada linha da tabela original
+        pacote_numero = 1
+        
         for _, row in st.session_state.df.iterrows():
             pacote = row["Pacote"]
-
-            # Se o pacote for novo, definir um novo número para ele
             if pacote not in pacote_counter:
                 pacote_counter[pacote] = pacote_numero
-                pacote_numero += 1  # Incrementar para o próximo pacote
-
-            # Para cada coluna de documento, verificar se está marcada como True
-            doc_index = 1  # Contador interno para o documento dentro do pacote
+                pacote_numero += 1
+            doc_index = 1
             for col in st.session_state.df.columns:
                 if col not in ["Pacote", "Sistema"] and row[col] == True:
-                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"  # Formato X.Y
+                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"
                     transformed_data.append({
                         "Numeração": numeracao,
                         "Pacote": pacote,
                         "Nome do Documento": col,
                         "Data de Finalização": ""
                     })
-                    doc_index += 1  # Incrementa a numeração dentro do pacote
-
-        # Criar um novo DataFrame com o formato desejado
+                    doc_index += 1
+        
         transformed_df = pd.DataFrame(transformed_data)
-
+        
         if not transformed_df.empty:
-            # Criar um buffer para o Excel
             excel_buffer = "MDR_tabela_transformada.xlsx"
-
-            # Criar o arquivo Excel e ajustar as colunas
-            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
-                transformed_df.to_excel(writer, index=False, sheet_name="MDR_Transformado")
-
-                # Ajustar largura das colunas
-                workbook = writer.book
-                worksheet = writer.sheets["MDR_Transformado"]
-                worksheet.set_column("A:A", 10)  # Numeração
-                worksheet.set_column("B:B", 20)  # Pacote
-                worksheet.set_column("C:C", 40)  # Nome do Documento
-                worksheet.set_column("D:D", 20)  # Data de Finalização (espaço extra)
-
-            # Botão para baixar o arquivo
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "MDR_Transformado"
+            
+            # Adicionar Campo e Nome do Projeto antes da tabela
+            ws.append(["Campo:", campo_selecionado])
+            ws.append(["Nome do Projeto:", projeto_nome])
+            ws.append([])  # Linha vazia antes da tabela
+            
+            for r in dataframe_to_rows(transformed_df, index=False, header=True):
+                ws.append(r)
+            
+            for col in ws.columns:
+                max_length = 0
+                col_letter = col[0].column_letter
+                for cell in col:
+                    try:
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                    except:
+                        pass
+                ws.column_dimensions[col_letter].width = max_length + 2
+            
+            wb.save(excel_buffer)
+            
             st.download_button(
                 label="Clique para baixar",
                 data=open(excel_buffer, "rb"),
