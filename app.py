@@ -238,15 +238,56 @@ header_info = {
         ],
         "Data de Finalização": []}
 
+footer_info = {
+    "Numeração": [
+        "3.",
+        "3.1.",
+        "3.2.",
+        "3.3.",
+        "3.4.",
+        "3.5.",
+        "3.6."
+    ],
+    "Pacote": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ],
+    "Nome do Documento": [
+        "FINALIZAÇÃO",
+        "FLDLAY - Subsea Layout As Built",
+        "BFD - Block Flow Diagram As Built",
+        "SGSS - Checklist de Atendimento ao SGSS (Fase de Instalação)",
+        "ICUE - Relatório Changelog do iCUE",
+        "DPP - Cadastro no DPP da ANP",
+        "MPL - Master Project List final de Projeto"
+    ],
+    "Data de Finalização": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ],
+}
+
 # 🔹 Seção de Baixar Tabela
 with col2:
     st.subheader("Baixar Tabela")
     
+    import openpyxl
+
     if st.button("Download Excel"):
         transformed_data = []
         pacote_counter = {}
         pacote_numero = 1
-        
+
         for _, row in st.session_state.df.iterrows():
             pacote = row["Pacote"]
             if pacote not in pacote_counter:
@@ -263,41 +304,66 @@ with col2:
                         "Data de Finalização": ""
                     })
                     doc_index += 1
-        
+
         transformed_df = pd.DataFrame(transformed_data)
-        
-        if not transformed_df.empty:
-            excel_buffer = "MDR_tabela_transformada.xlsx"
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "MDR_Transformado"
-            
-            # Adicionar Campo e Nome do Projeto antes da tabela
-            ws.append(["Campo:", campo_selecionado])
-            ws.append(["Nome do Projeto:", projeto_nome])
-            ws.append([])  # Linha vazia antes da tabela
-            
-            for r in dataframe_to_rows(transformed_df, index=False, header=True):
-                ws.append(r)
-            
-            for col in ws.columns:
-                max_length = 0
-                col_letter = col[0].column_letter
-                for cell in col:
-                    try:
-                        if cell.value:
-                            max_length = max(max_length, len(str(cell.value)))
-                    except:
-                        pass
-                ws.column_dimensions[col_letter].width = max_length + 2
-            
-            wb.save(excel_buffer)
-            
-            st.download_button(
-                label="Clique para baixar",
-                data=open(excel_buffer, "rb"),
-                file_name="MDR_tabela.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.warning("Nenhum dado marcado para exportação.")
+
+        # 🔹 Corrigir "header_info" removendo listas aninhadas
+        for key, value in header_info.items():
+            header_info[key] = [item[0] if isinstance(item, list) else item for item in value]
+
+        # 🔹 Ajustar tamanho das listas dentro do dicionário "header_info"
+        max_length = max(len(v) for v in header_info.values())  # Obtém o tamanho máximo das listas
+
+        for key in header_info.keys():
+            while len(header_info[key]) < max_length:
+                header_info[key].append("")  # Preenche as listas menores com valores vazios
+
+        # 🔹 Criar DataFrames para "Header Info" e "Footer Info"
+        header_info_df = pd.DataFrame(header_info)
+        footer_info_df = pd.DataFrame(footer_info)
+
+        # 🔹 Adicionar colunas vazias ao header_info_df caso não tenha as mesmas colunas do transformed_df
+        for col in transformed_df.columns:
+            if col not in header_info_df.columns:
+                header_info_df[col] = ""
+
+        # 🔹 Adicionar colunas vazias ao transformed_df caso não tenha as mesmas colunas do header_info_df
+        for col in header_info_df.columns:
+            if col not in transformed_df.columns:
+                transformed_df[col] = ""
+
+        # 🔹 Adicionar colunas vazias ao footer_info_df caso não tenha as mesmas colunas do transformed_df
+        for col in transformed_df.columns:
+            if col not in footer_info_df.columns:
+                footer_info_df[col] = ""
+
+        # 🔹 Unir os DataFrames (header_info + transformed_data + footer_info)
+        final_df = pd.concat([header_info_df, transformed_df, footer_info_df], ignore_index=True)
+
+        # 🔹 Exportar para Excel
+        excel_buffer = "MDR_tabela_transformada.xlsx"
+        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+            final_df.to_excel(writer, sheet_name="MDR_Transformado", index=False, startrow=4)  # Deixa espaço para Campo e Projeto
+
+            # 🔹 Ajustar o workbook para adicionar informações antes da tabela
+            workbook = writer.book
+            worksheet = writer.sheets["MDR_Transformado"]
+
+            # 🔹 Adicionar informações de "Campo" e "Projeto" antes da tabela
+            worksheet["A1"] = "Campo:"
+            worksheet["B1"] = campo_selecionado
+            worksheet["A2"] = "Projeto:"
+            worksheet["B2"] = projeto_nome
+
+            # 🔹 Ajustar largura das colunas automaticamente
+            for col_idx, col in enumerate(final_df.columns, 1):  # Começa do índice 1 porque no Excel as colunas começam em 'A'
+                max_length = max(final_df[col].astype(str).apply(len).max(), len(col)) + 5  # Ajusta para acomodar título e dados
+                worksheet.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = max_length
+
+        # 🔹 Botão de download
+        st.download_button(
+            label="Clique para baixar",
+            data=open(excel_buffer, "rb"),
+            file_name="MDR_tabela.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
