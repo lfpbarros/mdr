@@ -1,110 +1,72 @@
 import base64
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
-# 🔹 Define o nome da página e o favicon
+# ✩ Configurações da página
 st.set_page_config(page_title="Gerador de MDR", page_icon="📄", layout="wide")
 
-# Função para converter imagem local em base64
+# ✩ Função para converter imagem em base64
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-# Caminho da imagem de fundo
-background_image_path = "background.png"  # Substitua pelo nome correto do arquivo
-
-# Converter para base64
+# ✩ Aplica imagem de fundo
+background_image_path = "background.png"
 base64_bg = get_base64_image(background_image_path)
 
-# Adiciona imagem de fundo usando CSS
-st.markdown(
-    f"""
+st.markdown(f"""
     <style>
     .stApp {{
         background: url("data:image/png;base64,{base64_bg}") no-repeat center center fixed;
         background-size: cover;
     }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Exibe a logo no topo esquerdo
-st.image("logo.png", width=150)  # Substitua "logo.png" pelo nome do seu arquivo de logo
-
-st.markdown(
-    """
-    <style>
-    [data-testid="stSidebarNav"] {
+    header {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    [data-testid="stSidebarNav"] {{
         display: flex;
         align-items: center;
         justify-content: flex-start;
-    }
+    }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <style>
-        /* Remove o header padrão do Streamlit */
-        header {visibility: hidden;}
+# ✩ Exibe logo
+st.image("logo.png", width=150)
 
-        /* Remove o rodapé padrão do Streamlit */
-        footer {visibility: hidden;}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# Título da aplicação
+# ✩ Título da aplicação
 st.title("Gerador de MDR")
 
-# Lista de opções do dropdown
+# ✩ Listas de opções
 sistema_options = [
-    "DLG - Diligenciamento / Expediting", "GEN - General", "SUR - Survey", "FAS - Flow Assurance", 
-    "XTE - XT & Tools", "TCS - Topside Control Systems", "SCS - Subsea Control Systems", "FLY - Flying Lead", 
-    "HUB - Hubs & Conectors", "UTA - UTA", "PLT - PLET", "PLM - Manifold & PLEM", "ILS - ILS & ILT", 
-    "PIG - PIG Launcher Receiver", "CIV - CIMV Valve", "BOO - Boosting System (Pump)", "FLB - Flexible", 
-    "RID - Rigid", "UMB - Umbilical", "GIE - Gas Import / Export", "VES - Vessel", "LOG - Logistics", 
+    "DLG - Diligenciamento / Expediting", "GEN - General", "SUR - Survey", "FAS - Flow Assurance",
+    "XTE - XT & Tools", "TCS - Topside Control Systems", "SCS - Subsea Control Systems", "FLY - Flying Lead",
+    "HUB - Hubs & Conectors", "UTA - UTA", "PLT - PLET", "PLM - Manifold & PLEM", "ILS - ILS & ILT",
+    "PIG - PIG Launcher Receiver", "CIV - CIMV Valve", "BOO - Boosting System (Pump)", "FLB - Flexible",
+    "RID - Rigid", "UMB - Umbilical", "GIE - Gas Import / Export", "VES - Vessel", "LOG - Logistics",
     "INS - Installation Item", "ITG - Integrity", "OPS - Operation"
 ]
 
-# Lista de opções do dropdown para "Campo"
 campo_options = ["ABL", "TBMT", "FPA", "POL", "WAH"]
 
-# Campo de seleção fora da tabela
+checkbox_columns = [
+    "MEL - Master Equipment List", "DSGR - Design Report (Especificação Técnica)", "GA - General Arrangement",
+    "CC - Cathodic & Corrosion Report", "FAT - FAT & SIT Procedure", "OMM - Manual de Operação & Manutenção",
+    "PSM - Procedimento de Preservação e Manutenção", "RFAT - Relatório de FAT - SIT",
+    "DTBK - Data Book de Fabricação ou Manutenção", "ASB - Desenhos As-Built de Equipamentos",
+    "RREC - Relatório de Recebimento de Equipamento", "RTR - Reutilization Technical Report",
+    "IPR - Inspection Procedure & Reports", "TESP - Test Procedure", "MTPR - Maintenance Procedure & Reports",
+    "DFIO - Updated DFIO dossier", "UDTB - Updated Databook"
+]
+
+# ✩ Inputs do usuário
 st.subheader("Selecione o Campo")
 campo_selecionado = st.selectbox("Campo:", campo_options)
 
-# Campo de texto para "Projeto"
 st.subheader("Informe o Projeto")
 projeto_nome = st.text_input("Projeto:")
 
-# Lista de novas colunas (checkbox)
-checkbox_columns = [
-    "MEL - Master Equipment List", 
-    "DSGR - Design Report (Especificação Técnica)", 
-    "GA - General Arrangement", 
-    "CC - Cathodic & Corrosion Report", 
-    "FAT - FAT & SIT Procedure", 
-    "OMM - Manual de Operação & Manutenção", 
-    "PSM - Procedimento de Preservação e Manutenção", 
-    "RFAT - Relatório de FAT - SIT", 
-    "DTBK - Data Book de Fabricação ou Manutenção", 
-    "ASB - Desenhos As-Built de Equipamentos", 
-    "RREC - Relatório de Recebimento de Equipamento", 
-    "RTR - Reutilization Technical Report", 
-    "IPR - Inspection Procedure & Reports", 
-    "TESP - Test Procedure", 
-    "MTPR - Maintenance Procedure & Reports", 
-    "DFIO - Updated DFIO dossier", 
-    "UDTB - Updated Databook"
-]
-
-# 🔹 Inicializa a tabela no estado da sessão se não existir ainda
+# ✩ Inicializa DataFrame
 if "df" not in st.session_state:
     st.session_state.df = pd.DataFrame({
         "Pacote": ["Umbilical", "Conectores", "ANM"],
@@ -113,23 +75,19 @@ if "df" not in st.session_state:
     for col in checkbox_columns:
         st.session_state.df[col] = False
 
-# 🔹 Removendo linhas vazias antes de exibir a tabela
 st.session_state.df.dropna(how="all", inplace=True)
 st.session_state.df = st.session_state.df[st.session_state.df["Pacote"].str.strip() != ""]
-
-# 🔹 Resetar indexação para evitar criação automática de linhas
 st.session_state.df.reset_index(drop=True, inplace=True)
 
-# 🔹 Exibir a tabela editável sem permitir novas linhas vazias
-st.subheader("Preencha aqui as informações do MDR")
-
+# ✩ Editor de tabela
+st.subheader("Preencha aqui as informações do MDR (Master Document Register)")
 edited_df = st.data_editor(
     st.session_state.df,
     key="editable_table",
     use_container_width=True,
-    height=300,  # 🔹 Define altura para não gerar espaço extra
+    height=300,
     hide_index=True,
-    num_rows="dynamic",  # 🔹 Agora permite adicionar linha apenas quando necessário!
+    num_rows="dynamic",
     column_order=["Pacote", "Sistema"] + [col for col in st.session_state.df.columns if col not in ["Pacote", "Sistema"]],
     column_config={
         "Pacote": st.column_config.Column("Pacote", pinned=True),
@@ -137,96 +95,161 @@ edited_df = st.data_editor(
     }
 )
 
-# 🔹 Botão para salvar alterações sem manter linhas vazias
+# ✩ Botão para salvar alterações
 if st.button("Salvar Alterações", key="save_changes"):
-    edited_df.dropna(how="all", inplace=True)  # Remove NaN
+    edited_df.dropna(how="all", inplace=True)
     edited_df = edited_df[edited_df["Pacote"].str.strip() != ""]
-    edited_df.reset_index(drop=True, inplace=True)  # 🔹 Mantém índice fixo
+    edited_df.reset_index(drop=True, inplace=True)
     st.session_state.df = edited_df
     st.success("Alterações salvas!")
     st.rerun()
 
-# 🔹 Criar colunas lado a lado para "Adicionar Nova Coluna" e "Baixar Tabela"
+# ✩ Adicionar nova coluna ou baixar
 col1, col2 = st.columns(2)
 
-# 🔹 Seção de Adicionar Nova Coluna
 with col1:
     st.subheader("Adicionar Nova Coluna")
     st.write("Sempre salve as suas alterações antes de adicionar uma nova coluna!")
     new_column = st.text_input("Nome da nova coluna:")
-
     if st.button("Adicionar Coluna", key="add_column"):
         if new_column:
-            new_column = new_column.strip()  # Remove espaços extras
+            new_column = new_column.strip()
             if new_column not in st.session_state.df.columns:
-                # 🔹 Salvar a tabela antes de adicionar a nova coluna
-                st.session_state.df[new_column] = False  # Adiciona uma nova coluna de checkbox
+                st.session_state.df[new_column] = False
                 st.success(f"Coluna '{new_column}' adicionada!")
                 st.rerun()
             else:
                 st.warning("Essa coluna já existe!")
         else:
-            st.warning("Por favor, insira um nome válido para a coluna.")
+            st.warning("Insira um nome válido.")
 
-# 🔹 Seção de Baixar Tabela
 with col2:
     st.subheader("Baixar Tabela")
-    
     if st.button("Download Excel"):
-        # Criar uma nova estrutura de dados para armazenar os valores transformados
+
+        # 🔹 Gera inicio_df
+        inicio_data = {
+            "Numeração": [
+                "1", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9",
+                "2.1", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.1.5", "2.1.6", "2.1.7",
+                "2.1.8", "2.1.9", "2.1.10", "2.1.11", "2.1.12", "2.1.13", "2.1.14",
+                "2.1.15", "2.1.16", "2.1.17", "2.1.18", "2.1.19"
+            ],
+            "Pacote": ["" for _ in range(30)],
+            "Nome do Documento": [
+                "PORTFÓLIO", "BOD - Basis of Design Preliminar", "TAP - Formulário de Análise de Oportunidade",
+                "CRONOP - Cronograma Preliminar", "AEM - Análise de Estoque de materiais PRIO", "MPL - Master Project List Preliminar",
+                "AFE - Approval for Expenditure", "SUBLAYP - Subsea Layout Preliminar", "BFD - Block Flow Diagram Preliminar",
+                "STIME - Cronograma Preliminar de Operação", "PLANEJAMENTO - SYSTEM", "SCH - Project Baseline Schedule",
+                "WBS - Work Breakdown Structure", "BoD - Basis of Design", "BFD - Block Flow Diagram",
+                "SUBLAY - Subsea Layout", "DBD - Database Design", "SGSS - Checklist de Atendimento ao SGSS",
+                "MDR - Master Document Register Re", "HAZID - Project HAZID", "HDS - Overall System Hydraulic Schematic",
+                "ELS - Overall System Electrical Schematic", "BATIM - Bathimetry Report", "GEOTEC - Geotechnical Report",
+                "SBL - Scope Battery Limit", "FASS - Flow Assurance Report", "HEA - Hydraulical and Electrical Analysis",
+                "PRIR - Preliminary Recovery and Installation Requirements", "SCEM - Subsea Cause and Effect Matrix",
+                "Material Compatibility Assessment | Material Selection Report"
+            ],
+            "Data de Finalização": ["" for _ in range(30)]
+        }
+        inicio_df = pd.DataFrame(inicio_data)
+
+        # 🔹 Gera transformed_df
         transformed_data = []
-
-        # Criar um dicionário para rastrear a numeração de cada pacote
         pacote_counter = {}
-        pacote_numero = 1  # Começa a contagem dos pacotes
+        pacote_numero = 1
 
-        # Percorrer cada linha da tabela original
         for _, row in st.session_state.df.iterrows():
             pacote = row["Pacote"]
-
-            # Se o pacote for novo, definir um novo número para ele
             if pacote not in pacote_counter:
                 pacote_counter[pacote] = pacote_numero
-                pacote_numero += 1  # Incrementar para o próximo pacote
+                pacote_numero += 1
 
-            # Para cada coluna de documento, verificar se está marcada como True
-            doc_index = 1  # Contador interno para o documento dentro do pacote
+            doc_index = 1
             for col in st.session_state.df.columns:
                 if col not in ["Pacote", "Sistema"] and row[col] == True:
-                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"  # Formato X.Y
+                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"
                     transformed_data.append({
                         "Numeração": numeracao,
                         "Pacote": pacote,
                         "Nome do Documento": col,
                         "Data de Finalização": ""
                     })
-                    doc_index += 1  # Incrementa a numeração dentro do pacote
+                    doc_index += 1
 
-        # Criar um novo DataFrame com o formato desejado
         transformed_df = pd.DataFrame(transformed_data)
 
-        if not transformed_df.empty:
-            # Criar um buffer para o Excel
-            excel_buffer = "MDR_tabela_transformada.xlsx"
+        # 🔹 Cria final_df
+        final_data = {
+            "Numeração": [
+                "3.", "3.1.", "3.2.", "3.3.", "3.4.", "3.5.", "3.6."
+            ],
+            "Pacote": [""] * 7,
+            "Nome do Documento": [
+                "FINALIZAÇÃO",
+                "FLDLAY - Subsea Layout As Built",
+                "BFD - Block Flow Diagram As Built",
+                "SGSS - Checklist de Atendimento ao SGSS (Fase de Instalação)",
+                "ICUE - Relatório Changelog do iCUE",
+                "DPP - Cadastro no DPP da ANP",
+                "MPL - Master Project List final de Projeto"
+            ],
+            "Data de Finalização": [""] * 7
+        }
+        final_df = pd.DataFrame(final_data)
 
-            # Criar o arquivo Excel e ajustar as colunas
-            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
-                transformed_df.to_excel(writer, index=False, sheet_name="MDR_Transformado")
+        # 🔹 Junta tudo: inicio_df + transformed_df + final_df
+        df_final = pd.concat([inicio_df, transformed_df, final_df], ignore_index=True)
 
-                # Ajustar largura das colunas
-                workbook = writer.book
-                worksheet = writer.sheets["MDR_Transformado"]
-                worksheet.set_column("A:A", 10)  # Numeração
-                worksheet.set_column("B:B", 20)  # Pacote
-                worksheet.set_column("C:C", 40)  # Nome do Documento
-                worksheet.set_column("D:D", 20)  # Data de Finalização (espaço extra)
+        # Define o nome da aba, baseado no projeto
+        nome_aba = projeto_nome.strip() if projeto_nome.strip() else "MDR_Projeto"
 
-            # Botão para baixar o arquivo
-            st.download_button(
-                label="Clique para baixar",
-                data=open(excel_buffer, "rb"),
-                file_name="MDR_tabela.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            st.warning("Nenhum dado marcado para exportação.")
+        # Excel não permite mais que 31 caracteres no nome da aba
+        if len(nome_aba) > 31:
+            nome_aba = nome_aba[:31]
+
+        # Remove caracteres inválidos (Excel não aceita: \ / ? * [ ])
+        invalid_chars = ['\\', '/', '?', '*', '[', ']']
+        for char in invalid_chars:
+            nome_aba = nome_aba.replace(char, '')
+
+
+        # 🔹 Salva Excel direto na memória
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df_final.to_excel(writer, index=False, sheet_name=nome_aba, startrow=1)
+
+            workbook = writer.book
+            worksheet = writer.sheets[nome_aba]
+
+            worksheet.merge_range('A1:D1', projeto_nome, workbook.add_format({
+                'font_name': 'Aptos Narrow', 'font_size': 20, 'bold': True,
+                'align': 'center', 'valign': 'center', 'font_color': '#FFFFFF',
+                'bg_color': '#A6A6A6', 'border': 1
+            }))
+
+            header_format = workbook.add_format({
+                'bold': True, 'text_wrap': True, 'valign': 'center', 'align': 'center',
+                'fg_color': '#61CBF3', 'font_color': '#363636', 'font_name': 'Segoe UI', 'font_size': 12, 'border': 2
+            })
+
+            for idx, col in enumerate(df_final.columns):
+                # Pega o tamanho máximo de cada coluna
+                max_length = max(
+                    df_final[col].astype(str).map(len).max(),   # maior valor da coluna
+                    len(col)                                    # ou o nome da coluna
+                ) + 2  # adiciona uma margem extra para não ficar muito justo
+
+                worksheet.set_column(idx, idx, max_length)  # aplica a largura ajustada
+                worksheet.write(1, idx, col, header_format)  # escreve o cabeçalho formatado
+
+            worksheet.freeze_panes(2, 2)
+            worksheet.autofilter(1, 0, len(df_final)+1, len(df_final.columns)-1)
+
+        output.seek(0)
+
+        st.download_button(
+            label="Clique para baixar o MDR",
+            data=output,
+            file_name=f"MDR_{projeto_nome}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
