@@ -130,17 +130,18 @@ with col2:
         # 🔹 Gera inicio_df
         inicio_data = {
             "Numeração": [
-                "1", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9",
-                "2.1", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.1.5", "2.1.6", "2.1.7",
+                "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9",
+                "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.1.5", "2.1.6", "2.1.7",
                 "2.1.8", "2.1.9", "2.1.10", "2.1.11", "2.1.12", "2.1.13", "2.1.14",
                 "2.1.15", "2.1.16", "2.1.17", "2.1.18", "2.1.19"
             ],
-            "Pacote": ["" for _ in range(30)],
+            "Pacote": ["PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", "PORTFÓLIO", 
+                       "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM", "PLANEJAMENTO - SYSTEM"],
             "Nome do Documento": [
-                "PORTFÓLIO", "BOD - Basis of Design Preliminar", "TAP - Formulário de Análise de Oportunidade",
+                "BOD - Basis of Design Preliminar", "TAP - Formulário de Análise de Oportunidade",
                 "CRONOP - Cronograma Preliminar", "AEM - Análise de Estoque de materiais PRIO", "MPL - Master Project List Preliminar",
                 "AFE - Approval for Expenditure", "SUBLAYP - Subsea Layout Preliminar", "BFD - Block Flow Diagram Preliminar",
-                "STIME - Cronograma Preliminar de Operação", "PLANEJAMENTO - SYSTEM", "SCH - Project Baseline Schedule",
+                "STIME - Cronograma Preliminar de Operação", "SCH - Project Baseline Schedule",
                 "WBS - Work Breakdown Structure", "BoD - Basis of Design", "BFD - Block Flow Diagram",
                 "SUBLAY - Subsea Layout", "DBD - Database Design", "SGSS - Checklist de Atendimento ao SGSS",
                 "MDR - Master Document Register Re", "HAZID - Project HAZID", "HDS - Overall System Hydraulic Schematic",
@@ -149,7 +150,7 @@ with col2:
                 "PRIR - Preliminary Recovery and Installation Requirements", "SCEM - Subsea Cause and Effect Matrix",
                 "Material Compatibility Assessment | Material Selection Report"
             ],
-            "Data de Finalização": ["" for _ in range(30)]
+            "Data de Finalização": ["" for _ in range(28)]
         }
         inicio_df = pd.DataFrame(inicio_data)
 
@@ -177,18 +178,16 @@ with col2:
                         "Data de Finalização": ""
                     })
                     doc_index += 1
-                    doc_index += 1
 
         transformed_df = pd.DataFrame(transformed_data)
 
         # 🔹 Cria final_df
         final_data = {
             "Numeração": [
-                "3.", "3.1.", "3.2.", "3.3.", "3.4.", "3.5.", "3.6."
+                "3.1.", "3.2.", "3.3.", "3.4.", "3.5.", "3.6."
             ],
-            "Pacote": [""] * 7,
+            "Pacote": ["FINALIZAÇÃO", "FINALIZAÇÃO", "FINALIZAÇÃO", "FINALIZAÇÃO", "FINALIZAÇÃO", "FINALIZAÇÃO"],
             "Nome do Documento": [
-                "FINALIZAÇÃO",
                 "FLDLAY - Subsea Layout As Built",
                 "BFD - Block Flow Diagram As Built",
                 "SGSS - Checklist de Atendimento ao SGSS (Fase de Instalação)",
@@ -196,7 +195,7 @@ with col2:
                 "DPP - Cadastro no DPP da ANP",
                 "MPL - Master Project List final de Projeto"
             ],
-            "Data de Finalização": [""] * 7
+            "Data de Finalização": [""] * 6
         }
         final_df = pd.DataFrame(final_data)
 
