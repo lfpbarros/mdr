@@ -157,6 +157,7 @@ with col2:
         transformed_data = []
         pacote_counter = {}
         pacote_numero = 1
+        pacote_numero = 1
 
         for _, row in st.session_state.df.iterrows():
             pacote = row["Pacote"]
@@ -168,12 +169,14 @@ with col2:
             for col in st.session_state.df.columns:
                 if col not in ["Pacote", "Sistema"] and row[col] == True:
                     numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"
+                    numeracao = f"2.2.{pacote_counter[pacote]}.{doc_index}"
                     transformed_data.append({
                         "Numeração": numeracao,
                         "Pacote": pacote,
                         "Nome do Documento": col,
                         "Data de Finalização": ""
                     })
+                    doc_index += 1
                     doc_index += 1
 
         transformed_df = pd.DataFrame(transformed_data)
